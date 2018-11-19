@@ -41,8 +41,8 @@ ESX.RegisterServerCallback('esx_shops:requestDBItems', function(source, cb)
 	cb(ShopItems)
 end)
 
-RegisterServerEvent('esx_shops:buyItem')
-AddEventHandler('esx_shops:buyItem', function(itemName, amount, zone)
+RegisterServerEvent('esx_shops:buyItemliquid')
+AddEventHandler('esx_shops:buyItemliquid', function(itemName, amount, zone)
 	local _source = source
 	local xPlayer = ESX.GetPlayerFromId(_source)
 	local sourceItem = xPlayer.getInventoryItem(itemName)
@@ -81,6 +81,50 @@ AddEventHandler('esx_shops:buyItem', function(itemName, amount, zone)
 		end
 	else
 		local missingMoney = price - xPlayer.getMoney()
+		TriggerClientEvent('esx:showNotification', _source, _U('not_enough', missingMoney))
+	end
+end)
+
+RegisterServerEvent('esx_shops:buyItemcreditcard')
+AddEventHandler('esx_shops:buyItemcreditcard', function(itemName, amount, zone)
+	local _source = source
+	local xPlayer = ESX.GetPlayerFromId(_source)
+	local sourceItem = xPlayer.getInventoryItem(itemName)
+
+	amount = ESX.Round(amount)
+
+	-- is the player trying to exploit?
+	if amount < 0 then
+		print('esx_shops: ' .. xPlayer.identifier .. ' attempted to exploit the shop!')
+		return
+	end
+
+	-- get price
+	local price = 0
+	local itemLabel = ''
+
+	for i=1, #ShopItems[zone], 1 do
+		if ShopItems[zone][i].item == itemName then
+			price = ShopItems[zone][i].price
+			itemLabel = ShopItems[zone][i].label
+			break
+		end
+	end
+
+	price = price * amount
+
+	-- can the player afford this item?
+	if xPlayer.get('bank') >= price then
+		-- can the player carry the said amount of x item?
+		if sourceItem.limit ~= -1 and (sourceItem.count + amount) > sourceItem.limit then
+			TriggerClientEvent('esx:showNotification', _source, _U('player_cannot_hold'))
+		else
+			xPlayer.removeAccountMoney('bank',price)
+			xPlayer.addInventoryItem(itemName, amount)
+			TriggerClientEvent('esx:showNotification', _source, _U('bought', amount, itemLabel, price))
+		end
+	else
+		local missingMoney = price - xPlayer.get('bank')
 		TriggerClientEvent('esx:showNotification', _source, _U('not_enough', missingMoney))
 	end
 end)
