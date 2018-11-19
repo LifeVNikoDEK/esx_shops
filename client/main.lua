@@ -58,22 +58,26 @@ function OpenShopMenu(zone)
 	ESX.UI.Menu.CloseAll()
 	ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'shop', {
 		title    = _U('shop'),
-		align    = 'bottom-right',
+		align    = 'top-left',
 		elements = elements
 	}, function(data, menu)
 		ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'shop_confirm', {
 			title    = _U('shop_confirm', data.current.value, data.current.label_real, data.current.price * data.current.value),
-			align    = 'bottom-right',
+			align    = 'top-left',
 			elements = {
-				{label = _U('no'),  value = 'no'},
-				{label = _U('yes'), value = 'yes'}
+				{label = _U('credit_card'),  value = 'credit_card'},
+				{label = _U('liquid'), value = 'liquid'}
 			}
 		}, function(data2, menu2)
-			if data2.current.value == 'yes' then
-				TriggerServerEvent('esx_shops:buyItem', data.current.item, data.current.value, zone)
+			if data2.current.value == 'credit_card' then
+				TriggerServerEvent('esx_shops:buyItemcreditcard', data.current.item, data.current.value, zone)
+                menu2.close()
 			end
 
-			menu2.close()
+			if data2.current.value == 'liquid' then
+				TriggerServerEvent('esx_shops:buyItemliquid', data.current.item, data.current.value, zone)
+                menu2.close()
+			end
 		end, function(data2, menu2)
 			menu2.close()
 		end)
@@ -103,8 +107,8 @@ Citizen.CreateThread(function()
 			local blip = AddBlipForCoord(v.Pos[i].x, v.Pos[i].y, v.Pos[i].z)
 			SetBlipSprite (blip, 52)
 			SetBlipDisplay(blip, 4)
-			SetBlipScale  (blip, 1.0)
-			SetBlipColour (blip, 2)
+			SetBlipScale  (blip, 0.7)
+			SetBlipColour (blip, 0)
 			SetBlipAsShortRange(blip, true)
 			BeginTextCommandSetBlipName("STRING")
 			AddTextComponentString(_U('shops'))
